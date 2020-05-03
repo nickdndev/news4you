@@ -11,7 +11,8 @@ object config {
 
   final case class Config(
     appConfig: AppConfig,
-    dbConfig: DBConfig)
+    dbConfig: DBConfig,
+    botConfig: BotConfig)
 
   object Config {
     implicit val convert: ConfigConvert[Config] = deriveConvert
@@ -57,6 +58,14 @@ object config {
   object AppConfig {
     implicit val convert: ConfigConvert[AppConfig] = deriveConvert
   }
+
+  final case class BotConfig(
+                               token: String)
+
+  object BotConfig {
+    implicit val convert: ConfigConvert[BotConfig] = deriveConvert
+  }
+
 
   final case class DBConfig(
     url: String,

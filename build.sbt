@@ -75,6 +75,7 @@ lazy val root = (project in file("."))
       "org.apache.logging.log4j" % "log4j-slf4j-impl"     % Log4j2Version,
       "com.github.pureconfig"    %% "pureconfig"          % "0.12.1",
       "com.lihaoyi"              %% "sourcecode"          % "0.1.7",
+      "org.augustjune" %% "canoe" % "0.4.1",
       ("com.github.ghik" % "silencer-lib" % SilencerVersion % "provided")
         .cross(CrossVersion.full),
       // plugins
