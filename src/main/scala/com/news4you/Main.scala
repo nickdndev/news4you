@@ -1,117 +1,39 @@
 package com.news4you
 
 import canoe.api._
-import canoe.syntax._
 import cats.effect.ExitCode
+import com.news4you.bot.News4YouBot
 import com.news4you.config._
-import com.news4you.http.TodoService
-import com.news4you.repository.TodoRepository
 import fs2.Stream
-import org.http4s.HttpApp
-import org.http4s.implicits._
-import org.http4s.server.Router
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.server.middleware.CORS
 import zio._
 import zio.clock.Clock
 import zio.interop.catz._
-import com.news4you.config._
-import com.news4you.http.TodoService
 
 object Main extends App {
-    type AppTask[A] = RIO[Layers.AppEnv with Clock, A]
+    type AppTask[A] = RIO[Layers.News4YouEnv with Clock, A]
+
     override def run(args: List[String]): ZIO[ZEnv, Nothing, Int] = {
         val prog =
             for {
                 cfg <- ZIO.access[ConfigProvider](_.get)
                 _ <- logging.log.info(s"Starting with $cfg")
-                appCfg = cfg.appConfig
                 botConfig = cfg.botConfig
-
-                httpApp = Router[AppTask](
-                    "/todos" -> TodoService.routes(s"${appCfg.baseUrl}/todos")
-                ).orNotFound
-               // _ <-runTelegramBot(botConfig.token)
-                _ <- runHttpAndBot(httpApp, appCfg.port,botConfig.token)
-               // _ <-runTelegramBot(botConfig.token)
+                _ <- runTelegramBot(botConfig.token)
             } yield 0
 
-        prog
-            .provideSomeLayer[ZEnv](TodoRepository.withTracing(Layers.live.appLayer))
-            .orDie
+        prog.provideLayer(Layers.live.appLayer).orDie
     }
 
     def runTelegramBot[R <: Clock](token: String) = {
         type Task[A] = RIO[R, A]
 
-        def greetings[F[_] : TelegramClient]: Scenario[F, Unit] =
-            for {
-                chat <- Scenario.expect(command("hi").chat)
-                _ <- Scenario.eval(chat.send("Hello. What's your name?"))
-                name <- Scenario.expect(text)
-                _ <- Scenario.eval(chat.send(s"Nice to meet you, $name"))
-            } yield ()
-
-
         ZIO.runtime[R].flatMap { implicit rts =>
-
             Stream
                 .resource(TelegramClient.global[Task](token))
                 .flatMap { implicit client =>
-                    Bot.polling[Task].follow(greetings)
+                    Bot.polling[Task].follow(News4YouBot.news4YouBotScenario)
                 }
                 .compile.drain.as(ExitCode.Success)
-        }
-
-      /*  def greetings[F[_] : TelegramClient]: Scenario[F, Unit] =
-            for {
-                chat <- Scenario.expect(command("hi").chat)
-                _ <- Scenario.eval(chat.send("Hello. What's your name?"))
-                name <- Scenario.expect(text)
-                _ <- Scenario.eval(chat.send(s"Nice to meet you, $name"))
-            } yield ()
-
-        Stream
-            .resource(TelegramClient.global[IO](token))
-            .flatMap { implicit client =>
-                Bot.polling[IO].follow(greetings)
-            }
-            .compile.drain.as(ExitCode.Success)*/
-    }
-
-    def runHttpAndBot[R <: Clock](
-                               httpApp: HttpApp[RIO[R, *]],
-                               port: Int,
-                               token:String
-                           ): ZIO[R, Throwable, Unit] = {
-        type Task[A] = RIO[R, A]
-
-        ZIO.runtime[R].flatMap { implicit rts =>
-            BlazeServerBuilder[Task]
-                .bindHttp(port, "0.0.0.0")
-                .withHttpApp(CORS(httpApp))
-                .serve
-                .compile[Task, Task, ExitCode]
-                .drain
-
-            def greetings[F[_] : TelegramClient]: Scenario[F, Unit] =
-                for {
-                    chat <- Scenario.expect(command("hi").chat)
-                    _ <- Scenario.eval(chat.send("Hello. What's your name?"))
-                    name <- Scenario.expect(text)
-                    _ <- Scenario.eval(chat.send(s"Nice to meet you, $name"))
-                } yield ()
-
-            Stream
-                .resource(TelegramClient.global[Task](token))
-                .flatMap { implicit client =>
-                    Bot.polling[Task].follow(greetings)
-                }
-                .compile.drain/*.as(ExitCode.Success)
-
-*/
-
-
         }
     }
 }

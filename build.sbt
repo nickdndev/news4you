@@ -1,8 +1,8 @@
-val Http4sVersion     = "0.21.0-M5"
-val CirceVersion      = "0.12.3"
+//val Http4sVersion     = "0.21.3"
+//val CirceVersion      = "0.12.3"
 val DoobieVersion     = "0.8.6"
 val ZIOVersion        = "1.0.0-RC18-2"
-val ZIOLoggingVersion = "0.2.6"
+val ZIOLoggingVersion = "0.2.7"
 val SilencerVersion   = "1.4.4"
 val Log4j2Version     = "2.13.1"
 
@@ -25,11 +25,10 @@ scalafixDependencies in ThisBuild += "com.nequissimus" %% "sort-imports" % "0.3.
 lazy val root = (project in file("."))
   .enablePlugins(JavaAppPackaging, DockerSpotifyClientPlugin)
   .settings(
-    packageName in Docker := "zio-news4you",
-    dockerUsername in Docker := Some("grumpyraven"),
+    packageName in Docker := "zio-news4you-bot",
+    dockerUsername in Docker := Some("news4youbot"),
     dockerExposedPorts in Docker := Seq(8080),
-    organization := "com.schuwalow",
-    name := "news4you",
+    name := "news4youbot",
     scalaVersion := "2.13.1",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     scalacOptions := Seq(
@@ -53,12 +52,12 @@ lazy val root = (project in file("."))
               "-opt:l:inline"
             )),
     libraryDependencies ++= Seq(
-      "org.http4s"               %% "http4s-blaze-server" % Http4sVersion,
-      "org.http4s"               %% "http4s-circe"        % Http4sVersion,
-      "org.http4s"               %% "http4s-dsl"          % Http4sVersion,
-      "io.circe"                 %% "circe-core"          % CirceVersion,
-      "io.circe"                 %% "circe-generic"       % CirceVersion,
-      "io.circe"                 %% "circe-literal"       % CirceVersion % "test",
+      //"org.http4s"               %% "http4s-blaze-server" % Http4sVersion,
+      //"org.http4s"               %% "http4s-circe"        % Http4sVersion,
+      //"org.http4s"               %% "http4s-dsl"          % Http4sVersion,
+     // "io.circe"                 %% "circe-core"          % CirceVersion,
+      //"io.circe"                 %% "circe-generic"       % CirceVersion,
+      //"io.circe"                 %% "circe-literal"       % CirceVersion % "test",
       "org.tpolecat"             %% "doobie-core"         % DoobieVersion,
       "org.tpolecat"             %% "doobie-h2"           % DoobieVersion,
       "org.tpolecat"             %% "doobie-hikari"       % DoobieVersion,
